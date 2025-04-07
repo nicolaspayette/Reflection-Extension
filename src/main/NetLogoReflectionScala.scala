@@ -1,8 +1,7 @@
 package org.nlogo.extensions.reflection
 
-import org.nlogo.core.{ Program, Syntax }
-import org.nlogo.core.Syntax.{ NumberType, ListType }
-import org.nlogo.app.App
+import org.nlogo.core.Syntax
+import org.nlogo.core.Syntax.ListType
 import org.nlogo.nvm.ExtensionContext
 import org.nlogo.api.{ LogoListBuilder, Reporter, Context, Argument, PrimitiveManager, DefaultClassManager, ExtensionException }
 import org.nlogo.api.ScalaConversions._
@@ -26,7 +25,7 @@ class Globals extends Reporter {
           throw new ExtensionException(s"We need a workspace : $extContext");
         }
         val observer = extContext.workspace.world.observer
-        (0 until observer.getVariableCount).map(observer.variableName).toLogoList
+        observer.variables.indices.map(observer.variableName).toLogoList
       }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
@@ -67,8 +66,7 @@ class Procedures extends Reporter {
   override def report(args: Array[Argument], context: Context): AnyRef = {
     context match {
       case extContext: ExtensionContext => {
-        var workspace = extContext.workspace
-        workspace.procedures.map {
+        extContext.workspace.procedures.map {
           case (name, procedure) =>
             val procedureInfo = new LogoListBuilder
             procedureInfo.add(name)

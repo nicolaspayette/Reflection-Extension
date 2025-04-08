@@ -9,43 +9,42 @@ import org.nlogo.api.ScalaConversions._
 import org.nlogo.extensions.reflection.Utils.arguments
 
 class NetLogoReflectionScala extends DefaultClassManager {
-  override def load(manager: PrimitiveManager) {
+  override def load(manager: PrimitiveManager): Unit = {
     manager.addPrimitive("globals", new Globals)
     manager.addPrimitive("breeds", new Breeds)
-    manager.addPrimitive("procedures", new Procedures);
-    manager.addPrimitive("arguments", new Arguments);
-    manager.addPrimitive("current-procedure", new CurrentProcedure);
+    manager.addPrimitive("procedures", new Procedures)
+    manager.addPrimitive("arguments", new Arguments)
+    manager.addPrimitive("current-procedure", new CurrentProcedure)
     manager.addPrimitive("current-argument-values", new CurrentArgumentValues)
-    manager.addPrimitive("callers", new Callers);
+    manager.addPrimitive("callers", new Callers)
   }
 }
 
 class Globals extends Reporter {
-  override def getSyntax = Syntax.reporterSyntax(ret = ListType)
+  override def getSyntax: Syntax = Syntax.reporterSyntax(ret = ListType)
   override def report(args: Array[Argument], context: Context): AnyRef = {
     context match {
-      case extContext: ExtensionContext => {
+      case extContext: ExtensionContext =>
         if (extContext.workspace == null) {
-          throw new ExtensionException(s"We need a workspace : $extContext");
+          throw new ExtensionException(s"We need a workspace : $extContext")
         }
         val observer = extContext.workspace.world.observer
         observer.variables.indices.map(observer.variableName).toLogoList
-      }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
   }
 }
 
 class Breeds extends Reporter {
-  override def getSyntax = Syntax.reporterSyntax(ret = ListType)
+  override def getSyntax: Syntax = Syntax.reporterSyntax(ret = ListType)
   override def report(args: Array[Argument], context: Context): AnyRef = {
     context match {
-      case extContext: ExtensionContext => {
+      case extContext: ExtensionContext =>
         val breeds = new LogoListBuilder
         // add turtle vars as a separate tuple
         val turtleInfo = new LogoListBuilder
         turtleInfo.add("TURTLES")
-        val workspace = extContext.workspace;
+        val workspace = extContext.workspace
         val turtleVars = workspace.world.program.turtleVars.keys.toVector.toLogoList
         turtleInfo.add(turtleVars)
         breeds.add(turtleInfo.toLogoList)
@@ -59,17 +58,16 @@ class Breeds extends Reporter {
         }
         otherBreeds.foreach(breeds.add)
         breeds.toLogoList
-      }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
   }
 }
 
 class Procedures extends Reporter {
-  override def getSyntax = Syntax.reporterSyntax(ret = ListType)
+  override def getSyntax: Syntax = Syntax.reporterSyntax(ret = ListType)
   override def report(args: Array[Argument], context: Context): AnyRef = {
     context match {
-      case extContext: ExtensionContext => {
+      case extContext: ExtensionContext =>
         extContext.workspace.procedures.map {
           case (name, procedure) =>
             val procedureInfo = new LogoListBuilder
@@ -79,29 +77,27 @@ class Procedures extends Reporter {
             procedureInfo.add(arguments(procedure).toLogoList)
             procedureInfo.toLogoList
         }.toVector.toLogoList
-      }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
   }
 }
 
 class Arguments extends Reporter {
-  override def getSyntax = Syntax.reporterSyntax(right = List(StringType), ret = ListType)
+  override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(StringType), ret = ListType)
   override def report(args: Array[Argument], context: Context): AnyRef = {
     context match {
-      case extContext: ExtensionContext => {
+      case extContext: ExtensionContext =>
         extContext.workspace.procedures
           .find { case (name, _) => name == args(0).getString.toUpperCase }
           .map { case (_, procedure) => arguments(procedure).toLogoList }
           .getOrElse(throw new ExtensionException(s"Unknown procedure : ${args(0).getString}"))
-      }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
   }
 }
 
 class CurrentProcedure extends Reporter {
-  override def getSyntax = Syntax.reporterSyntax(ret = ListType)
+  override def getSyntax: Syntax = Syntax.reporterSyntax(ret = ListType)
   override def report(args: Array[Argument], context: Context): AnyRef = {
     context match {
       case extContext: ExtensionContext => extContext.nvmContext.activation.procedure.name;
@@ -111,10 +107,10 @@ class CurrentProcedure extends Reporter {
 }
 
 class CurrentArgumentValues extends Reporter {
-  override def getSyntax = Syntax.reporterSyntax(ret = ListType)
+  override def getSyntax: Syntax = Syntax.reporterSyntax(ret = ListType)
   override def report(args: Array[Argument], context: Context): AnyRef = {
     context match {
-      case extContext: ExtensionContext => {
+      case extContext: ExtensionContext =>
         val activation = extContext.nvmContext.activation
         val procedure = activation.procedure
         val argumentNames = arguments(procedure)
@@ -123,25 +119,23 @@ class CurrentArgumentValues extends Reporter {
           result.add(LogoList(name, value))
         }
         result.toLogoList
-      }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
   }
 }
 
 class Callers extends Reporter {
-  override def getSyntax = Syntax.reporterSyntax(ret = ListType)
+  override def getSyntax: Syntax = Syntax.reporterSyntax(ret = ListType)
   override def report(args: Array[Argument], context: Context): AnyRef = {
     val callers = new LogoListBuilder
     context match {
-      case extContext: ExtensionContext => {
+      case extContext: ExtensionContext =>
         var activation = extContext.nvmContext.activation
         while (activation != null && activation.procedure != null) {
           callers.add(activation.procedure.name)
           activation = activation.parent
         }
         callers.toLogoList
-      }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
   }

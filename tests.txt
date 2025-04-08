@@ -40,6 +40,15 @@ reflection-gets-procedures
   to start let vs 0 show vs end
   reflection:procedures => [["REV" "REPORTER" "OTPL" ["TACOS"]] ["START" "COMMAND" "OTPL" []]]
 
+reflection-gets-arguments
+  extensions [ reflection ]
+  to-report rev [tacos] report (tacos - 1) end
+  to start let vs 0 show vs end
+  reflection:arguments "REV" => ["TACOS"]
+  reflection:arguments "rev" => ["TACOS"]
+  reflection:arguments "START" => []
+  reflection:arguments "start" => []
+
 reflection-gets-current-procedure
   extensions [ reflection ]
   to-report rev [tacos] set tacos (tacos - 1) report reflection:current-procedure end

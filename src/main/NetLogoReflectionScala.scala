@@ -2,15 +2,18 @@ package org.nlogo.extensions.reflection
 
 import org.nlogo.core.Syntax
 import org.nlogo.core.Syntax.ListType
-import org.nlogo.nvm.ExtensionContext
-import org.nlogo.api.{ LogoListBuilder, Reporter, Context, Argument, PrimitiveManager, DefaultClassManager, ExtensionException }
+import org.nlogo.core.Syntax.StringType
+import org.nlogo.nvm.{ExtensionContext, Procedure}
+import org.nlogo.api.{Argument, Context, DefaultClassManager, ExtensionException, LogoListBuilder, PrimitiveManager, Reporter}
 import org.nlogo.api.ScalaConversions._
+import org.nlogo.extensions.reflection.Utils.arguments
 
 class NetLogoReflectionScala extends DefaultClassManager {
   override def load(manager: PrimitiveManager) {
     manager.addPrimitive("globals", new Globals)
     manager.addPrimitive("breeds", new Breeds)
     manager.addPrimitive("procedures", new Procedures);
+    manager.addPrimitive("arguments", new Arguments);
     manager.addPrimitive("current-procedure", new CurrentProcedure);
     manager.addPrimitive("callers", new Callers);
   }
@@ -72,13 +75,24 @@ class Procedures extends Reporter {
             procedureInfo.add(name)
             procedureInfo.add(if (procedure.isReporter) "REPORTER" else "COMMAND")
             procedureInfo.add(procedure.agentClassString)
-            // args contains dummies (temp 'lets') so we don't include them.
-            // localsCount contains number of lets so we just subtract that
-            val argsCount = procedure.args.size - procedure.localsCount
-            val args = procedure.args.take(argsCount).toLogoList
-            procedureInfo.add(args)
+            procedureInfo.add(arguments(procedure).toLogoList)
             procedureInfo.toLogoList
         }.toVector.toLogoList
+      }
+      case _ => throw new ExtensionException(s"Unknown context given : $context")
+    }
+  }
+}
+
+class Arguments extends Reporter {
+  override def getSyntax = Syntax.reporterSyntax(right = List(StringType), ret = ListType)
+  override def report(args: Array[Argument], context: Context): AnyRef = {
+    context match {
+      case extContext: ExtensionContext => {
+        extContext.workspace.procedures
+          .find { case (name, _) => name == args(0).getString.toUpperCase }
+          .map { case (_, procedure) => arguments(procedure).toLogoList }
+          .getOrElse(throw new ExtensionException(s"Unknown procedure : ${args(0).getString}"))
       }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
@@ -110,5 +124,14 @@ class Callers extends Reporter {
       }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
+  }
+}
+
+object Utils {
+  def arguments(procedure: Procedure): Vector[String] = {
+    // args contains dummies (temp 'lets') so we don't include them.
+    // localsCount contains number of lets so we just subtract that
+    val argsCount = procedure.args.size - procedure.localsCount
+    procedure.args.take(argsCount)
   }
 }

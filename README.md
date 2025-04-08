@@ -11,6 +11,9 @@ It has a few simple reporters:
 ## `procedures`
 `reflection:procedures` reports a list of all procedures and their arguments. It also tells you whether they are reporters or commands.
 
+## `arguments`
+`reflection:arguments <procedure-name>` reports the list of arguments of `<procedure-name>`.  
+
 ## `current-procedure`
 `reflection:current-procedure` reports the name of the current procedure.
 

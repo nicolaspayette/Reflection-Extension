@@ -18,7 +18,7 @@ It has a few simple reporters:
 `reflection:current-procedure` reports the name of the current procedure.
 
 ## `current-argument-values`
-`reflection:current-argument-values` reports the arguments of the current procedure and their current values. The result is structured as a list of lists, where each sublist contains the name of an argument and its value. 
+`reflection:current-argument-values` reports the arguments of the current procedure and their current values. The result is a list of lists, where each sublist contains the name of an argument and its value. 
 
 ## `callers`
 `reflection:callers` reports the name of the callers to the current procedure as a list. If this is inside a procedure `foo`, which is called by `bar` this will report `["FOO" "BAR"]`.

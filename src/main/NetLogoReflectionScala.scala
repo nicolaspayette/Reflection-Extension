@@ -1,6 +1,6 @@
 package org.nlogo.extensions.reflection
 
-import org.nlogo.core.Syntax
+import org.nlogo.core.{LogoList, Syntax}
 import org.nlogo.core.Syntax.ListType
 import org.nlogo.core.Syntax.StringType
 import org.nlogo.nvm.{ExtensionContext, Procedure}
@@ -15,6 +15,7 @@ class NetLogoReflectionScala extends DefaultClassManager {
     manager.addPrimitive("procedures", new Procedures);
     manager.addPrimitive("arguments", new Arguments);
     manager.addPrimitive("current-procedure", new CurrentProcedure);
+    manager.addPrimitive("current-argument-values", new CurrentArgumentValues)
     manager.addPrimitive("callers", new Callers);
   }
 }
@@ -104,6 +105,25 @@ class CurrentProcedure extends Reporter {
   override def report(args: Array[Argument], context: Context): AnyRef = {
     context match {
       case extContext: ExtensionContext => extContext.nvmContext.activation.procedure.name;
+      case _ => throw new ExtensionException(s"Unknown context given : $context")
+    }
+  }
+}
+
+class CurrentArgumentValues extends Reporter {
+  override def getSyntax = Syntax.reporterSyntax(ret = ListType)
+  override def report(args: Array[Argument], context: Context): AnyRef = {
+    context match {
+      case extContext: ExtensionContext => {
+        val activation = extContext.nvmContext.activation
+        val procedure = activation.procedure
+        val argumentNames = arguments(procedure)
+        val result = new LogoListBuilder
+        argumentNames.zip(activation.args).foreach { case (name, value) =>
+          result.add(LogoList(name, value))
+        }
+        result.toLogoList
+      }
       case _ => throw new ExtensionException(s"Unknown context given : $context")
     }
   }

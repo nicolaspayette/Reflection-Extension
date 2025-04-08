@@ -49,6 +49,15 @@ reflection-gets-arguments
   reflection:arguments "START" => []
   reflection:arguments "start" => []
 
+reflection-gets-current-argument-values
+  extensions [ reflection ]
+  to-report r1 [a] report reflection:current-argument-values end
+  to-report r2 [a b] report reflection:current-argument-values end
+  r1 1 => [["A" 1]]
+  r1 "x" => [["A" "x"]]
+  r2 1 "x" => [["A" 1] ["B" "x"]]
+  r2 "y" 2 => [["A" "y"] ["B" 2]]
+
 reflection-gets-current-procedure
   extensions [ reflection ]
   to-report rev [tacos] set tacos (tacos - 1) report reflection:current-procedure end
